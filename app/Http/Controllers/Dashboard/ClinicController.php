@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\BusinessHour;
 use App\Models\Clinic;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class ClinicController extends Controller
 {
@@ -13,7 +15,8 @@ class ClinicController extends Controller
      */
     public function index()
     {
-        //
+        $clinics = Clinic::filter(request()->all())->paginate(10);
+        return view('dashboard.clinics.index', compact('clinics'));
     }
 
     /**
@@ -21,7 +24,8 @@ class ClinicController extends Controller
      */
     public function create()
     {
-        //
+        $clinic = new Clinic();
+        return view('dashboard.clinics.create', compact('clinic'));
     }
 
     /**
@@ -29,7 +33,12 @@ class ClinicController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate(Clinic::rules());
+
+        $clinic = Clinic::create($request->all());
+        $this->syncBusinessHours($clinic, $request->business_hours);
+
+        return Redirect::route('dashboard.clinics.index')->with('success', 'Clinic added successfully.');
     }
 
     /**
@@ -37,7 +46,9 @@ class ClinicController extends Controller
      */
     public function show(Clinic $clinic)
     {
-        //
+        $business_hours = $this->getBusinessHoursForClinic($clinic);
+        // dd($business_hours);
+        return view('dashboard.clinics.show', compact('clinic', 'business_hours'));
     }
 
     /**
@@ -45,7 +56,8 @@ class ClinicController extends Controller
      */
     public function edit(Clinic $clinic)
     {
-        //
+        $business_hours = $this->getBusinessHoursForClinic($clinic);
+        return view('dashboard.clinics.edit', compact('clinic', 'business_hours'));
     }
 
     /**
@@ -53,7 +65,13 @@ class ClinicController extends Controller
      */
     public function update(Request $request, Clinic $clinic)
     {
-        //
+        $request->validate(Clinic::rules());
+
+        $clinic->update($request->all());
+        $this->syncBusinessHours($clinic, $request->business_hours);
+
+        return Redirect::route('dashboard.clinics.index')
+            ->with('success', 'Clinic updated successfully.');
     }
 
     /**
@@ -61,6 +79,45 @@ class ClinicController extends Controller
      */
     public function destroy(Clinic $clinic)
     {
-        //
+        $clinic->delete();
+        return Redirect::route('dashboard.clinics.index')
+            ->with('success', 'Clinic deleted successfully.');
+    }
+
+    /**
+     * Sync business hours for a clinic.
+     */
+    private function syncBusinessHours(Clinic $clinic, array $businessHours): void
+    {
+        foreach ($businessHours as $day => $hour) {
+            BusinessHour::updateOrCreate(
+                ['clinic_id' => $clinic->id, 'day' => $day],
+                [
+                    'open_time' => $hour['open_time'],
+                    'close_time' => $hour['close_time'],
+                    'lunch_start' => $hour['lunch_start'] ?? null,
+                    'lunch_end' => $hour['lunch_end'] ?? null,
+                ]
+            );
+        }
+    }
+
+    /**
+     * Get business hours for a clinic grouped by day.
+     */
+    private function getBusinessHoursForClinic(Clinic $clinic): array
+    {
+        return BusinessHour::where('clinic_id', $clinic->id)
+            ->get()
+            ->groupBy('day')
+            ->map(function ($hours) {
+                return [
+                    'open_time' => substr($hours[0]->open_time, 0, -3),
+                    'close_time' => substr($hours[0]->close_time, 0, -3),
+                    'lunch_start' => substr($hours[0]->lunch_start, 0, -3) ?? null,
+                    'lunch_end' => substr($hours[0]->lunch_end, 0, -3) ?? null,
+                ];
+            })
+            ->toArray();
     }
 }
