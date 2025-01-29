@@ -3,10 +3,10 @@
 return [
     [
         'icon' => 'nav-icon fas fa-tachometer-alt',
-        'route' => 'dashboard.dashboard',
+        'route' => 'dashboard.clinics.index',
         'title' => 'Clincs',
         'badge' => 'New',
-        'active' => 'dashboard.dashboard',
+        'active' => 'dashboard.clinics.index',
     ],
     
 ];
