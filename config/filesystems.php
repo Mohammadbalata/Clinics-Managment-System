@@ -47,6 +47,15 @@ return [
             'report' => false,
         ],
 
+        // 'uplodes' => [
+        //     'driver' => 'local',
+        //     'root' => public_path('uplodes'),
+        //     'url' => env('APP_URL').'/uplodes',
+        //     'visibility' => 'public',
+        //     'throw' => false,
+        //     'report' => false,
+        // ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
