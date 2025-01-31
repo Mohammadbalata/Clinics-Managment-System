@@ -25,6 +25,11 @@ class Clinic extends Model
         return $this->hasMany(Faq::class);
     }
 
+    public function insurances()
+{
+    return $this->belongsToMany(Insurance::class, 'clinic_insurance');
+}
+
     public function scopeFilter(Builder $builder, $filters)
     {
 

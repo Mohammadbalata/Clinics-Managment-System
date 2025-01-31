@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Dashboard\ClinicController;
+use App\Http\Controllers\Dashboard\ClinicInsuranceController;
 use App\Http\Controllers\Dashboard\FAQController;
 use App\Http\Controllers\Dashboard\InsurancesController;
 use App\Http\Controllers\ProfileController;
@@ -36,5 +37,8 @@ Route::group([
     Route::resource('/insurances', InsurancesController::class);
     Route::resource('/clinics/{clinic}/faq', FAQController::class);
 
+    Route::resource('/clinics/{clinic}/clinics-insurances', ClinicInsuranceController::class)
+    ->except(['update','show','index','edit']);
+    
     Route::resource('/rooms', RoomController::class);
 });

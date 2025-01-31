@@ -20,10 +20,9 @@ return new class extends Migration
         });
 
         Schema::create('clinic_insurance', function (Blueprint $table) {
-            $table->id();
             $table->foreignId('clinic_id')->constrained('clinics')->onDelete('cascade');
             $table->foreignId('insurance_id')->constrained('insurances')->onDelete('cascade');
-            $table->timestamps();
+            $table->primary(["clinic_id", "insurance_id"]);
         });
     }
 
