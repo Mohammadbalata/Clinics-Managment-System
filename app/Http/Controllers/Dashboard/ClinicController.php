@@ -47,8 +47,9 @@ class ClinicController extends Controller
     public function show(Clinic $clinic)
     {
         $business_hours = $this->getBusinessHoursForClinic($clinic);
+        $insurances = $clinic->insurances;
         // dd($business_hours);
-        return view('dashboard.clinics.show', compact('clinic', 'business_hours'));
+        return view('dashboard.clinics.show', compact('clinic', 'business_hours','insurances'));
     }
 
     /**
