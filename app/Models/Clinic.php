@@ -20,6 +20,11 @@ class Clinic extends Model
         return $this->hasMany(BusinessHour::class);
     }
 
+    public function faqs()
+    {
+        return $this->hasMany(Faq::class);
+    }
+
     public function scopeFilter(Builder $builder, $filters)
     {
 

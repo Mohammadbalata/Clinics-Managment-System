@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Dashboard\ClinicController;
+use App\Http\Controllers\Dashboard\FAQController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
@@ -31,5 +32,7 @@ Route::group([
     })->name('dashboard');
 
     Route::resource('/clinics', ClinicController::class);
+    Route::resource('/clinics/{clinic}/faq', FAQController::class);
+
     Route::resource('/rooms', RoomController::class);
 });
