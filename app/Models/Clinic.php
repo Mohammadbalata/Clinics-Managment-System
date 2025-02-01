@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Builder;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Clinic extends Model
 {
+    use Filterable;
     protected $fillable = [
         'office_name',
         'office_address',
@@ -26,17 +28,15 @@ class Clinic extends Model
     }
 
     public function insurances()
-{
-    return $this->belongsToMany(Insurance::class, 'clinic_insurance');
-}
-
-    public function scopeFilter(Builder $builder, $filters)
     {
-
-        if ($filters['office_name'] ?? false) {
-            $builder->where('clinics.office_name', 'LIKE', "%{$filters['office_name']}%");
-        }
+        return $this->belongsToMany(Insurance::class, 'clinic_insurance');
     }
+
+    public function doctors(){
+        return $this->hasMany(Doctor::class);
+    }
+
+   
 
 
     public static function rules()
