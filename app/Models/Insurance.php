@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Builder;
 
 use Illuminate\Database\Eloquent\Model;
@@ -9,15 +10,10 @@ use Illuminate\Http\Request;
 
 class Insurance extends Model
 {
+    use Filterable;
+
     protected $fillable = ['name', 'description', 'logo'];
 
-
-    public function scopeFilter(Builder $builder, $filters)
-    {
-        if ($filters['name'] ?? false) {
-            $builder->where('insurances.name', 'LIKE', "%{$filters['name']}%");
-        }
-    }
 
 
 

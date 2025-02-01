@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Dashboard\ClinicController;
 use App\Http\Controllers\Dashboard\ClinicInsuranceController;
+use App\Http\Controllers\Dashboard\DoctorController;
 use App\Http\Controllers\Dashboard\FAQController;
 use App\Http\Controllers\Dashboard\InsurancesController;
 use App\Http\Controllers\Dashboard\ProcedureController;
@@ -43,4 +44,5 @@ Route::group([
     
     Route::resource('/rooms', RoomController::class);
     Route::resource('/procedures', ProcedureController::class);
+    Route::resource('/doctors', DoctorController::class);
 });
