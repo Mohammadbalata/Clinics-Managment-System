@@ -4,8 +4,9 @@ use App\Http\Controllers\Dashboard\ClinicController;
 use App\Http\Controllers\Dashboard\ClinicInsuranceController;
 use App\Http\Controllers\Dashboard\FAQController;
 use App\Http\Controllers\Dashboard\InsurancesController;
+use App\Http\Controllers\Dashboard\ProcedureController;
+use App\Http\Controllers\Dashboard\RoomController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -41,4 +42,5 @@ Route::group([
     ->except(['update','show','index','edit']);
     
     Route::resource('/rooms', RoomController::class);
+    Route::resource('/procedures', ProcedureController::class);
 });
