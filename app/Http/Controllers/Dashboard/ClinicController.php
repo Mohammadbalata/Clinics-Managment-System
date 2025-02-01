@@ -47,8 +47,9 @@ class ClinicController extends Controller
     public function show(Clinic $clinic)
     {
         $business_hours = $this->getBusinessHoursForClinic($clinic);
+        $insurances = $clinic->insurances;
         // dd($business_hours);
-        return view('dashboard.clinics.show', compact('clinic', 'business_hours'));
+        return view('dashboard.clinics.show', compact('clinic', 'business_hours','insurances'));
     }
 
     /**
@@ -90,8 +91,8 @@ class ClinicController extends Controller
     private function syncBusinessHours(Clinic $clinic, array $businessHours): void
     {
         foreach ($businessHours as $day => $hour) {
-            BusinessHour::updateOrCreate(
-                ['clinic_id' => $clinic->id, 'day' => $day],
+            $clinic->businessHours()->updateOrCreate(
+                ['day' => $day],
                 [
                     'open_time' => $hour['open_time'],
                     'close_time' => $hour['close_time'],
@@ -107,17 +108,16 @@ class ClinicController extends Controller
      */
     private function getBusinessHoursForClinic(Clinic $clinic): array
     {
-        return BusinessHour::where('clinic_id', $clinic->id)
-            ->get()
-            ->groupBy('day')
-            ->map(function ($hours) {
-                return [
-                    'open_time' => substr($hours[0]->open_time, 0, -3),
-                    'close_time' => substr($hours[0]->close_time, 0, -3),
-                    'lunch_start' => substr($hours[0]->lunch_start, 0, -3) ?? null,
-                    'lunch_end' => substr($hours[0]->lunch_end, 0, -3) ?? null,
-                ];
-            })
-            ->toArray();
+        return $clinic->businessHours
+        ->groupBy('day')
+        ->map(function ($hours) {
+            return [
+                'open_time' => substr($hours[0]->open_time, 0, -3),
+                'close_time' => substr($hours[0]->close_time, 0, -3),
+                'lunch_start' => $hours[0]->lunch_start ? substr($hours[0]->lunch_start, 0, -3) : null,
+                'lunch_end' => $hours[0]->lunch_end ? substr($hours[0]->lunch_end, 0, -3) : null,
+            ];
+        })
+        ->toArray();
     }
 }

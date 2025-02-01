@@ -13,7 +13,8 @@
 
 
 <div class="container mt-2">
-    <a href="{{route('dashboard.clinics.edit',$clinic->id)}}" class="btn btn-sm btn-outline-success mb-2">Edit</a>
+    <a href="{{route('dashboard.clinics.edit',$clinic->id)}}" class="btn btn-sm btn-outline-success mb-2">Edit clinic</a>
+    <a href="{{route('dashboard.faq.index', $clinic->id)}}" class="btn btn-sm btn-outline-success mb-2">Show FAQ</a>
 
     <div class="card">
         <div class="card-header bg-primary text-white">
@@ -64,6 +65,41 @@
                 <td>{{ $business_hours[$day]['lunch_end'] ?? '11:00' }}</td>
             </tr>
             @endforeach
+        </tbody>
+    </table>
+
+    <a href="{{route('dashboard.clinics-insurances.create', $clinic->id)}}" class="btn btn-sm btn-outline-success mb-2">Add Insurance</a>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Created at</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @forelse($insurances as $insurance)
+            <tr>
+                <td> <img src="{{asset('storage/' . $insurance->logo)}}" height="50" alt=""> </td>
+                <td><a href="{{route('dashboard.insurances.show',$insurance->id)}}">{{$insurance?->name}} </a> </td>
+                <td> {{$insurance?->created_at}}</td>
+                
+                <td>
+                    <form action="{{ route('dashboard.clinics-insurances.destroy',['clinic' => $clinic->id, 'clinics_insurance' => $insurance->id]) }}" method="post">
+                        @csrf
+                        @method('delete')
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="7">No Insurances</td>
+            </tr>
+            @endforelse
         </tbody>
     </table>
 </div>

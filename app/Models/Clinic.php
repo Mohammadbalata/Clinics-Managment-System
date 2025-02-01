@@ -20,6 +20,16 @@ class Clinic extends Model
         return $this->hasMany(BusinessHour::class);
     }
 
+    public function faqs()
+    {
+        return $this->hasMany(Faq::class);
+    }
+
+    public function insurances()
+{
+    return $this->belongsToMany(Insurance::class, 'clinic_insurance');
+}
+
     public function scopeFilter(Builder $builder, $filters)
     {
 
