@@ -1,8 +1,9 @@
 <?php
 
 use App\Http\Controllers\Dashboard\ClinicController;
+use App\Http\Controllers\Dashboard\ProcedureController;
+use App\Http\Controllers\Dashboard\RoomController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -32,4 +33,5 @@ Route::group([
 
     Route::resource('/clinics', ClinicController::class);
     Route::resource('/rooms', RoomController::class);
+    Route::resource('/procedures', ProcedureController::class);
 });
