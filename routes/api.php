@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\PatientController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,8 +19,12 @@ Route::get('testing', function () {
 });
 
 // endpoints: 
-// GET /api/patient -get the patient by his name or phone_num
-// GET /api/patient/{id}/appointments -get list of patient's appointments by patient's name or phone_num
+// get the patient by phone number or name
+Route::get('/patients/search', [PatientController::class, 'search']);
+
+// get the patient appointments by phone number or name
+Route::get('/patients/{query}/appointments', [PatientController::class, 'patientAppointments']);
+Route::get('/available-slots', [PatientController::class, 'availableSlots']);
 
 // [protected] POST /api/appointments/schedule -create a new appointment (patient_id || {first_name, last_name, phone_num}, doctor_id, procedure_id, date, time)
 // [protected] PATCH /api/appointments/{id/confirm -confirm the appointment by  appointment_id

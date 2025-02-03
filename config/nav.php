@@ -22,5 +22,19 @@ return [
         'badge' => 'New',
         'active' => 'dashboard.doctors.index',
     ],
+    [
+        'icon' => 'nav-icon fas fa-tachometer-alt',
+        'route' => 'dashboard.rooms.index',
+        'title' => 'Rooms',
+        'badge' => '',
+        'active' => 'dashboard.rooms.index',
+    ],
+    [
+        'icon' => 'nav-icon fas fa-tachometer-alt',
+        'route' => 'dashboard.procedures.index',
+        'title' => 'Procedures',
+        'badge' => '',
+        'active' => 'dashboard.procedures.index',
+    ],
     
 ];

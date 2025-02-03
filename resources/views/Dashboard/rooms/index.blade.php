@@ -51,6 +51,7 @@
             <tr>
                 <th>Id</th>
                 <th>Name</th>
+                <th>Clinic</th>
                 <th>type</th>
                 <th>status</th>
                 <th>capacity</th>
@@ -63,6 +64,7 @@
                 <tr>
                     <td> {{ $room?->id }} </td>
                     <td>{{ $room?->name }} </td>
+                    <td>{{ $room?->clinic->id }} {{ $room?->clinic->office_name }} </td>
                     <td> {{ $room?->type }} </td>
                     <td> {{ $room?->status }} </td>
                     <td> {{ $room?->capacity }} </td>

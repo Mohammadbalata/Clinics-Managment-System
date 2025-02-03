@@ -41,7 +41,8 @@
             <tr>
                 <th>Id</th>
                 <th>Name</th>
-                <th>Clinic</th>
+                <th>Doctor</th>
+                <th>DRoom</th>
                 <th>Description</th>
                 <th>Duration (min)</th>
                 <th>Coast</th>
@@ -54,7 +55,8 @@
                 <tr>
                     <td> {{ $pro?->id }} </td>
                     <td> {{ $pro?->name }} </td>
-                    <td> {{ $pro->clinic->office_name }} </td>
+                    <td> {{ $pro->doctor->first_name }} {{ $pro->doctor->last_name }} </td>
+                    <td> {{ $pro->room->name }} </td>
                     <td> {{ $pro->description }} </td>
                     <td> {{ $pro?->duration }} </td>
                     <td> {{ $pro?->coast }} </td>
