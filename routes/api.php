@@ -25,7 +25,7 @@ Route::get('/patients/search', [PatientController::class, 'search']);
 
 // get the patient appointments by phone number or name
 Route::get('/patients/{query}/appointments', [PatientController::class, 'patientAppointments']);
-Route::get('/available-slots', [PatientController::class, 'availableSlots']);
+Route::get('/available-slots', [PatientController::class, 'getAvailableSlots']);
 
 
 Route::group([
