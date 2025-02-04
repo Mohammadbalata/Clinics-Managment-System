@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ClinicRequest;
 use App\Models\BusinessHour;
 use App\Models\Clinic;
 use Illuminate\Http\Request;
@@ -31,9 +32,9 @@ class ClinicController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ClinicRequest $request)
     {
-        $request->validate(Clinic::rules());
+        // $request->validate(Clinic::rules()); 
 
         $clinic = Clinic::create($request->all());
         $this->syncBusinessHours($clinic, $request->business_hours);
@@ -64,9 +65,9 @@ class ClinicController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Clinic $clinic)
+    public function update(ClinicRequest $request, Clinic $clinic)
     {
-        $request->validate(Clinic::rules());
+        // $request->validate(Clinic::rules());
 
         $clinic->update($request->all());
         $this->syncBusinessHours($clinic, $request->business_hours);

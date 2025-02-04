@@ -42,7 +42,7 @@ class Clinic extends Model
     public static function rules()
     {
         return  [
-            'office_name'       => 'required|string|max:255',
+            'office_name'       => 'required|string|min:3|max:255',
             'office_address'    => 'required|string|max:500',
             'timezone'          => 'required|timezone',
             'secretary_number'  => 'required|string|regex:/^\+?[0-9]{7,15}$/',

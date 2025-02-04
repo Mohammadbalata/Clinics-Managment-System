@@ -39,7 +39,7 @@ class Insurance extends Model
         return  [
             'name'       => 'required|string|max:255',
             'description'    => 'string',
-            'logo' => ['image', 'max:1048576', 'dimensions:min_width=100,min_height=100']
+            'logo' => ['required','image', 'max:1048576', 'dimensions:min_width=100,min_height=100']
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InsuranceRequest;
 use App\Models\Insurance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -32,10 +33,10 @@ class InsurancesController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(InsuranceRequest $request)
     {
         // dd($request->all());
-        $request->validate(Insurance::rules()); 
+        // $request->validate(Insurance::rules()); 
         $data = $request->except('logo');
         $data['logo'] = Insurance::uploadImage($request);
         $insurance = Insurance::create($data);
@@ -62,7 +63,7 @@ class InsurancesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(InsuranceRequest $request, string $id)
     {
         $insurance = Insurance::findOrFail($id);
         $old_image = $insurance->logo;
