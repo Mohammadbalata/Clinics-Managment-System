@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\BusinessHour;
-use App\Models\Clinic;
 use App\Models\Patient;
 use App\Models\Procedure;
-use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -65,43 +63,54 @@ class PatientController extends Controller
     }
     public function availableSlots(Request $request)
     {
-        try {
-            // validate the request
-            $request->validate([
-                'clinic_id' => 'required|exists:clinics,id',
-                'procedure_id' => 'required|exists:procedures,id',
-                'date' => 'required|date_format:Y-m-d',
-            ]);
 
-            // check if the procedure is available in the clinic
-            $procedure = Procedure::with(['doctor'])->findOrFail($request->procedure_id);
-            $clinic = Clinic::findOrFail($request->clinic_id);
+        $request->validate([
+            'procedure_id' => 'required|exists:procedures,id',
+            'date' => 'required|date',
+            'clinic_id' => 'required|exists:clinics,id',
+        ]);
 
-            $room = Room::findOrFail($procedure->room_id);
-            if ($room->clinic_id !== $clinic->id) {
-                return response()->json([
-                    'message' => 'Procedure not available in this clinic',
-                ], Response::HTTP_NOT_FOUND);
-            }
+        $procedureId = $request->input('procedure_id');
+        $date = $request->input('date');
+        $clinicId = $request->input('clinic_id');
+        $procedure = Procedure::findOrFail($procedureId);
+        $duration = $procedure->duration;
+        $doctorId = $procedure->doctor_id;
+        $roomId = $procedure->room_id;
 
-            $dayOfWeek = strtolower(Carbon::parse($request->date)->englishDayOfWeek);
+        $dayOfWeek = Carbon::parse($date)->format('l');
+        $businessHours = BusinessHour::where('clinic_id', $clinicId)
+            ->where('day', $dayOfWeek)
+            ->first();
 
-            // getting the business hours for the clinic
-            $businessHours = BusinessHour::where('clinic_id', $clinic->id)
-                ->where('day', $dayOfWeek)
-                ->first();
-
-            if (!$businessHours) {
-                return response()->json(['message' => 'Clinic is closed on this day'], Response::HTTP_OK);
-            }
-
-
-            // get the available slots based on the business hours and the duration.
-            // exclude the slots that are already booked.
-            // return the available slots
-            // Generate time slots
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        if (!$businessHours) {
+            return response()->json(['error' => 'Clinic is closed on this day'], 404);
         }
+
+        $businessStartTime = Carbon::parse($businessHours->open_time);
+        $businessEndTime = Carbon::parse($businessHours->close_time);
+
+        $existingAppointments = Appointment::where('doctor_id', $doctorId)
+            ->orWhere('room_id', $roomId)
+            ->whereDate('start_time', $date)
+            ->get();
+
+        $availableSlots = [];
+        $currentSlotStart = $businessStartTime->copy();
+
+        while ($currentSlotStart->copy()->addMinutes($duration)->lte($businessEndTime)) {
+            $slotEnd = $currentSlotStart->copy()->addMinutes($duration);
+
+            $conflict = $existingAppointments->contains(function ($appointment) use ($currentSlotStart, $slotEnd) {
+                return $currentSlotStart->lt($appointment->end_time) && $slotEnd->gt($appointment->start_time);
+            });
+
+            if (!$conflict) {
+                $availableSlots[] = $currentSlotStart->toTimeString('minute') . "-" . $slotEnd->toTimeString('minute');
+            }
+            $currentSlotStart->addMinutes($duration);
+        }
+
+        return response()->json(['data' => $availableSlots]);
     }
 }
