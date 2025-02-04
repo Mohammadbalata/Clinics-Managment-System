@@ -9,7 +9,6 @@
 
 <div class="form-group">
   <x-form.input label="Office name" type="text" :value="$clinic->office_name" name="office_name" />
-
 </div>
 <div class="form-group">
   <x-form.input label="Office address" type="text" :value="$clinic->office_address" name="office_address" />
@@ -19,13 +18,12 @@
   <label for="name">Office timezone</label>
   <select name="timezone" class="form-control form-select">
     <option value="">Primary timezone</option>
-    <option value="UTC">UTC</option>
-    <option value="Asia/Dubai">Asia/Dubai (GST)</option>
-    <option value="America/New_York">America/New_York (EST)</option>
-    <option value="Europe/London">Europe/London (GMT)</option>
-    <option value="Asia/Riyadh">Asia/Riyadh (AST)</option>
+    @foreach (\DateTimeZone::listIdentifiers() as $timezone)
+      <option value="{{ $timezone }}" @selected(old('timezone', $clinic->timezone) == $timezone)>{{ $timezone }}</option>
+    @endforeach
   </select>
 </div>
+
 
 <div class="form-group">
   <x-form.input label="Secretary Number" type="text" :value="$clinic->secretary_number" name="secretary_number" />

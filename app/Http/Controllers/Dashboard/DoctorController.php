@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DoctorRequest;
 use App\Models\Clinic;
 use App\Models\Doctor;
 use Illuminate\Http\Request;
@@ -32,10 +33,10 @@ class DoctorController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(DoctorRequest $request)
     {
         // dd($request->all());
-        $request->validate(Doctor::rules());
+        // $request->validate(Doctor::rules());
         $doctor = Doctor::create($request->all());
         return redirect()->route('dashboard.doctors.index')->with('success', 'Doctor added successfully.');
     }
@@ -61,10 +62,10 @@ class DoctorController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Doctor $doctor)
+    public function update(DoctorRequest $request, Doctor $doctor)
     {
        
-        $request->validate(Doctor::rules($doctor->id));
+        // $request->validate(Doctor::rules($doctor->id));
         $doctor->update($request->all());
         return redirect()->route('dashboard.doctors.index')->with('success', 'Doctor updated successfully.');
     }

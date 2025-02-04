@@ -22,12 +22,11 @@ class AppointmentsController extends Controller
             $request->validate(Appointment::rules($request));
             $procedure = Procedure::findOrFail($request->procedure_id); // to get the related doctor & room
             $room = Room::findOrFail($procedure->room_id); // to get related clinic
-
+            
             // TODO: make sure that to exclude just the (pending, confirm) appointment, while we need to consider the cancelled appointments as available slots
             // check if the slot available. 
             // get the user, 
             $patientExists = Patient::where('phone_number', $request->patient['phone_number'])->first();
-
             // if the user doesn't exists, create it, 
             if (!$patientExists) {
                 $newPatient = Patient::create($request->patient);
