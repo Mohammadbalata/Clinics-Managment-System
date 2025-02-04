@@ -61,7 +61,7 @@ class PatientController extends Controller
             return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-    public function availableSlots(Request $request)
+    public function getAvailableSlots(Request $request)
     {
 
         $request->validate([
