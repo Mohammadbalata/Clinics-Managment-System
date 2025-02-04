@@ -16,32 +16,30 @@ class Appointment extends Model
         'room_id',
         'start_time',
         'end_time',
+        'date',
         'status',
         'cancellation_reason',
     ];
 
     protected $casts = [
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
+        'start_time' => 'datetime:H:i',
+        'end_time' => 'datetime:H:i',
+        'date' => 'date:Y-m-d',
         'status' => AppointmentStatusEnum::class,
     ];
 
-    public static function rules()
+    public static function rules($request)
     {
         return [
-            'status'     => 'in:' . implode(',', array_column(AppointmentStatusEnum::cases(), 'value')),
-            'capacity'   => 'required|integer|min:1',
-            'patient_id'  => 'required|exists:patients,id',
-            'doctor_id'  => 'required|exists:doctors,id',
+            'patient_id'  => 'nullable|exists:patients,id',
             'procedure_id'  => 'required|exists:procedures,id',
-            'clinic_id'  => 'required|exists:clinics,id',
-            'room_id'  => 'required|exists:rooms,id',
-            'start_time' => 'required|date|after:now|before:end_time',
-            'end_time' => 'required|date|after:start_time',
-            'cancellation_reason' => 'nullable|string',
+            'start_time' => 'required|date_format:H:i',
+            'date' => 'required|date|after:now|date_format:Y-m-d',
+            'patient.first_name' => $request->input('patient_id') ? 'nullable|string|min:3' : 'required|string|min:3',
+            'patient.last_name' => $request->input('patient_id') ? 'nullable|string|min:3' : 'required|string|min:3',
+            'patient.phone_number' =>  $request->input('patient_id') ? 'nullable|string|regex:/^\+?[0-9]{7,15}$/' : 'required|string|regex:/^\+?[0-9]{7,15}$/',
         ];
     }
-
 
     // Relationships
     public function patient(): BelongsTo

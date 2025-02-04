@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AppointmentsController;
 use App\Http\Controllers\Api\PatientController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,7 +27,12 @@ Route::get('/patients/search', [PatientController::class, 'search']);
 Route::get('/patients/{query}/appointments', [PatientController::class, 'patientAppointments']);
 Route::get('/available-slots', [PatientController::class, 'availableSlots']);
 
-// [protected] POST /api/appointments/schedule -create a new appointment (patient_id || {first_name, last_name, phone_num}, doctor_id, procedure_id, date, time)
-// [protected] PATCH /api/appointments/{id/confirm -confirm the appointment by  appointment_id
-// [protected] PATCH /api/appointments/{id/cancel -cancel the appointment by appointment_id (appointment_id, reason)
-// [not protected] GET /api/available-slots  -get available appointments by (doctor_id, date range, procedure_id (optional))
+
+Route::group([
+  'as' => 'appointments.',
+  'prefix' => 'appointments',
+], function () {
+  Route::post('/schedule', [AppointmentsController::class, 'schedule']);
+  Route::patch('/{id}/confirm', [AppointmentsController::class, 'confirm']);
+  Route::patch('/{id}/cancel', [AppointmentsController::class, 'cancel']);
+});
