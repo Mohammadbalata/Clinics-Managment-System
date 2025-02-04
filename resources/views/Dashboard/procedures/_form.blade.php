@@ -24,11 +24,21 @@
 </div>
 
 <div class="form-group mr-2">
-    <label for="clinic_id" class="mr-2">clinic</label>
-    <select name="clinic_id" id="clinic_id" class="form-control">
-        @foreach (App\Models\Clinic::all() as $clinic)
-            <option value="{{ $clinic->id }}" @selected(old('clinic_id', $clinic->clinic_id ?? null) == $clinic->id)>
-                {{ $clinic->office_name }}
+    <label for="doctor_id" class="mr-2">doctor</label>
+    <select name="doctor_id" id="doctor_id" class="form-control">
+        @foreach (App\Models\Doctor::all() as $doctor)
+            <option value="{{ $doctor->id }}" @selected(old('doctor_id', $doctor->doctor_id ?? null) == $doctor->id)>
+                {{ $doctor->first_name }} {{ $doctor->last_name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+<div class="form-group mr-2">
+    <label for="room_id" class="mr-2">Room</label>
+    <select name="room_id" id="room_id" class="form-control">
+        @foreach (App\Models\Room::all() as $room)
+            <option value="{{ $room->id }}" @selected(old('room_id', $room->room_id ?? null) == $room->id)>
+                {{ $room->name }}
             </option>
         @endforeach
     </select>

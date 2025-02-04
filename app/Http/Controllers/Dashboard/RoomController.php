@@ -23,7 +23,7 @@ class RoomController extends Controller
             $query->byStatus(request('status'));
         }
 
-        $rooms = $query->latest()->paginate(10);
+        $rooms = $query->with('clinic')->latest()->paginate(10);
         // dd($rooms);
         return view('dashboard.rooms.index', compact('rooms'));
     }

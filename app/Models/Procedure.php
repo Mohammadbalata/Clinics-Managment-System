@@ -11,7 +11,8 @@ class Procedure extends Model
         'description',
         'duration',
         'coast',
-        'clinic_id'
+        'doctor_id',
+        'room_id'
     ];
 
     public static function rules()
@@ -21,12 +22,19 @@ class Procedure extends Model
             'description'       => 'nullable|string|max:700',
             'duration'   => 'required|integer|min:5',
             'coast'   => 'required|integer|min:0',
-            'clinic_id'  => 'required|exists:clinics,id',
+            'doctor_id'  => 'required|exists:doctors,id',
+            'room_id'  => 'required|exists:rooms,id',
         ];
     }
 
-    public function clinic()
+    // Relationships
+    public function doctor()
     {
-        return $this->belongsTo(Clinic::class, 'clinic_id', 'id')->withDefault();
+        return $this->belongsTo(Doctor::class);
+    }
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
     }
 }

@@ -23,7 +23,7 @@ class ProcedureController extends Controller
             $sortBy = 'id'; // default to id if invalid
         }
 
-        $procedures = Procedure::with(['clinic'])
+        $procedures = Procedure::with(['room','doctor'])
             ->orderBy($sortBy, $sortDir)
             ->latest()
             ->paginate();
