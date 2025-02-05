@@ -32,7 +32,7 @@ Route::group([
   'as' => 'appointments.',
   'prefix' => 'appointments',
 ], function () {
-  Route::post('/schedule', [AppointmentsController::class, 'schedule']);
+  Route::post('/', [AppointmentsController::class, 'schedule']);
   Route::patch('/{id}/confirm', [AppointmentsController::class, 'confirm']);
   Route::patch('/{id}/cancel', [AppointmentsController::class, 'cancel']);
 });
