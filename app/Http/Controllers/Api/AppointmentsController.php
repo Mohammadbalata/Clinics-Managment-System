@@ -102,12 +102,12 @@ class AppointmentsController extends Controller
                 'start_time' => $startTime->format('H:i'),
                 'end_time' => $endTime->format('H:i'),
             ]);
-
+             event(new AppointmentCreated($appointment));
             return response()->json([
                 'message' => 'appointment schedule successfully.',
                 'data' => $appointment,
             ], Response::HTTP_OK);
-            event(new AppointmentCreated($appointment));
+           
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
