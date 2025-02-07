@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AppointmentStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\BusinessHour;
 use App\Models\Patient;
 use App\Models\Procedure;
+use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -61,9 +63,12 @@ class PatientController extends Controller
             return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+
+
+
     public function getAvailableSlots(Request $request)
     {
-
         $request->validate([
             'procedure_id' => 'required|exists:procedures,id',
             'date' => 'required|date',
@@ -78,6 +83,11 @@ class PatientController extends Controller
         $doctorId = $procedure->doctor_id;
         $roomId = $procedure->room_id;
 
+        // Ensure room belongs to the clinic
+        if (!Room::where('id', $roomId)->where('clinic_id', $clinicId)->exists()) {
+            return response()->json(['error' => 'Selected room does not belong to this clinic'], 400);
+        }
+
         $dayOfWeek = Carbon::parse($date)->format('l');
         $businessHours = BusinessHour::where('clinic_id', $clinicId)
             ->where('day', $dayOfWeek)
@@ -87,13 +97,34 @@ class PatientController extends Controller
             return response()->json(['error' => 'Clinic is closed on this day'], 404);
         }
 
-        $businessStartTime = Carbon::parse($businessHours->open_time);
-        $businessEndTime = Carbon::parse($businessHours->close_time);
-
-        $existingAppointments = Appointment::where('doctor_id', $doctorId)
-            ->orWhere('room_id', $roomId)
-            ->whereDate('start_time', $date)
+        $existingAppointments = Appointment::where(function ($query) use ($doctorId, $roomId) {
+            $query->where('doctor_id', $doctorId)
+                ->orWhere('room_id', $roomId);
+        })
+            ->where('date', $date)
+            ->where('status', '!=', AppointmentStatusEnum::Cancelled)
             ->get();
+        $availableSlots = $this->generateAvailableSlots(
+            $businessHours->open_time,
+            $businessHours->close_time,
+            $businessHours->lunch_start,
+            $businessHours->lunch_end,
+            $duration,
+            $existingAppointments
+        );
+        dd($availableSlots);
+        return response()->json(['data' => $availableSlots]);
+    }
+
+    /**
+     * Generate available time slots excluding booked appointments and lunch break.
+     */
+    public static function generateAvailableSlots($openTime, $closeTime, $lunchStart, $lunchEnd, $duration, $existingAppointments)
+    {
+        $businessStartTime = Carbon::parse($openTime);
+        $businessEndTime = Carbon::parse($closeTime);
+        $lunchStartTime = $lunchStart ? Carbon::parse($lunchStart) : null;
+        $lunchEndTime = $lunchEnd ? Carbon::parse($lunchEnd) : null;
 
         $availableSlots = [];
         $currentSlotStart = $businessStartTime->copy();
@@ -101,6 +132,16 @@ class PatientController extends Controller
         while ($currentSlotStart->copy()->addMinutes($duration)->lte($businessEndTime)) {
             $slotEnd = $currentSlotStart->copy()->addMinutes($duration);
 
+            // Skip lunch break
+            if (
+                $lunchStartTime && $lunchEndTime &&
+                $currentSlotStart->lt($lunchEndTime) && $slotEnd->gt($lunchStartTime)
+            ) {
+                $currentSlotStart = $lunchEndTime->copy();
+                continue;
+            }
+
+            // Check for conflicts with existing appointments
             $conflict = $existingAppointments->contains(function ($appointment) use ($currentSlotStart, $slotEnd) {
                 return $currentSlotStart->lt($appointment->end_time) && $slotEnd->gt($appointment->start_time);
             });
@@ -111,6 +152,6 @@ class PatientController extends Controller
             $currentSlotStart->addMinutes($duration);
         }
 
-        return response()->json(['data' => $availableSlots]);
+        return $availableSlots;
     }
 }

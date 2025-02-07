@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\AppointmentStatusEnum;
+use App\Events\AppointmentCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\BusinessHour;
+use App\Models\Clinic;
 use App\Models\Patient;
 use App\Models\Procedure;
 use App\Models\Room;
@@ -20,8 +23,13 @@ class AppointmentsController extends Controller
         try {
             // validate req
             $request->validate(Appointment::rules($request));
+
+
             $procedure = Procedure::findOrFail($request->procedure_id); // to get the related doctor & room
             $room = Room::findOrFail($procedure->room_id); // to get related clinic
+            $doctorId = $procedure->doctor_id;
+            $roomId = $procedure->room_id;
+            $dayOfWeek = Carbon::parse($request->date)->format('l');
 
             // check if the slot available.
 
@@ -29,10 +37,41 @@ class AppointmentsController extends Controller
             // TODO: make sure that to exclude just the (pending, confirm) appointment, while we need to consider the cancelled appointments as available slots
             // handle the case of lunch_start & lunch_end. 
 
+
+            $businessHours = BusinessHour::where('clinic_id', $room->clinic_id)
+                ->where('day', $dayOfWeek)
+                ->first();
+
+            $existingAppointments = Appointment::where(function ($query) use ($doctorId, $roomId) {
+                $query->where('doctor_id', $doctorId)
+                    ->orWhere('room_id', $roomId);
+            })
+                ->where('date', $request->date)
+                ->where('status', '!=', AppointmentStatusEnum::Cancelled)
+                ->get();
+
+            $availableSlots = PatientController::generateAvailableSlots(
+                $businessHours->open_time,
+                $businessHours->close_time,
+                $businessHours->lunch_start,
+                $businessHours->lunch_end,
+                $procedure->duration,
+                $existingAppointments
+            );
+
+            $startTime = Carbon::parse($request->start_time);
+            $procedureTime = $startTime->toTimeString("minutes") . '-' . $startTime->addMinutes($procedure->duration)->toTimeString("minutes");
+            
+            if (!in_array($procedureTime, $availableSlots)) {
+                return response()->json(['error' => 'Sorry, The Appointment is already booked'], 400);
+            }
+
+
+
             // get the user, 
             if ($request->patient_id) {
                 //validate patient_id
-                $patient = Patient::find('id', $request->patient_id);
+                $patient = Patient::findOrFail($request->patient_id);
                 if (! $patient)
                     return response()->json(['error' => 'patient not found.'], Response::HTTP_NOT_FOUND);
                 $request->merge(['patient_id' => $patient->id]);
@@ -49,7 +88,6 @@ class AppointmentsController extends Controller
                 }
             }
 
-
             // create an appointment record, with pending status,
             $startTime = Carbon::createFromFormat('H:i', $request->start_time);
             $endTime = $startTime->copy()->addMinutes($procedure->duration);
@@ -64,10 +102,12 @@ class AppointmentsController extends Controller
                 'start_time' => $startTime->format('H:i'),
                 'end_time' => $endTime->format('H:i'),
             ]);
+
             return response()->json([
                 'message' => 'appointment schedule successfully.',
                 'data' => $appointment,
             ], Response::HTTP_OK);
+            event(new AppointmentCreated($appointment));
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
