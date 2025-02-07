@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\AppointmentStatusEnum;
 use App\Events\AppointmentCreated;
+use App\Events\AppointmentCancelled;
+use App\Events\AppointmentConfirmed;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\BusinessHour;
@@ -102,12 +104,11 @@ class AppointmentsController extends Controller
                 'start_time' => $startTime->format('H:i'),
                 'end_time' => $endTime->format('H:i'),
             ]);
-             event(new AppointmentCreated($appointment));
+            event(new AppointmentCreated($appointment));
             return response()->json([
                 'message' => 'appointment schedule successfully.',
                 'data' => $appointment,
             ], Response::HTTP_OK);
-           
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -139,6 +140,7 @@ class AppointmentsController extends Controller
             // update the appointment status to confirmed & returning res
             $appointment->status = AppointmentStatusEnum::Confirmed;
             $appointment->save();
+            event(new AppointmentConfirmed($appointment));
 
             return response()->json([
                 'message' => 'appointment confirmed.',
@@ -165,6 +167,7 @@ class AppointmentsController extends Controller
 
             // validate that the appointment is exists.
             $appointment = Appointment::find($id);
+            // dd($appointment);
             if (!$appointment || $appointment->status !== AppointmentStatusEnum::Confirmed) {
                 return response()->json(['error' => 'appointment not valid.'], Response::HTTP_NOT_FOUND);
             }
@@ -178,6 +181,8 @@ class AppointmentsController extends Controller
             $appointment->status = AppointmentStatusEnum::Cancelled;
             $request->cancellation_reason && $appointment->cancellation_reason = $request->cancellation_reason;
             $appointment->save();
+            // dd($appointment);
+            event(new AppointmentCancelled($appointment));
 
             return response()->json([
                 'message' => 'appointment cancelled.',
