@@ -24,7 +24,6 @@ class DoctorController extends Controller
      */
     public function create()
     {
-
         $doctor = new Doctor();
         $clinics = Clinic::all();
         return view('dashboard.doctors.create', compact('doctor','clinics'));
@@ -56,7 +55,8 @@ class DoctorController extends Controller
      */
     public function edit(Doctor $doctor)
     {
-        return view('dashboard.doctors.edit', compact('doctor'));
+        $clinics = Clinic::all();
+        return view('dashboard.doctors.edit', compact('doctor','clinics'));
     }
 
     /**

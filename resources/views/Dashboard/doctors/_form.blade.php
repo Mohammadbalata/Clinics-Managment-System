@@ -39,7 +39,7 @@
 <div class="form-group mr-2">
     <label for="clinic_id" class="mr-2">clinic</label>
     <select name="clinic_id" id="clinic_id" class="form-control">
-        @foreach (App\Models\Clinic::all() as $clinic)
+        @foreach ($clinics as $clinic)
             <option value="{{ $clinic->id }}" @selected(old('clinic_id', $clinic->id ?? null) == $doctor->clinic_id)>
                 {{ $clinic->office_name }}
             </option>
