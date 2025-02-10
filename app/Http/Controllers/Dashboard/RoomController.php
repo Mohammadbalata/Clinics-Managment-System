@@ -43,7 +43,7 @@ class RoomController extends Controller
     public function store(Request $request)
     {
 
-        $request->validate(Room::rules());
+        // $request->validate(Room::rules());
 
         // dd($request->all());
         Room::create($request->all());
@@ -69,7 +69,7 @@ class RoomController extends Controller
      */
     public function update(Request $request, Room $room)
     {
-        $request->validate(Room::rules());
+        // $request->validate(Room::rules());
         $room->update($request->all());
         return redirect()->route('dashboard.rooms.index')->with('success', 'Room updated successfully.');
     }
