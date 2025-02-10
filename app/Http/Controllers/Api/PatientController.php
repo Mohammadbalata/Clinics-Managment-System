@@ -86,7 +86,6 @@ class PatientController extends Controller
         $doctorId = $procedure->doctor_id;
         $roomId = $procedure->room_id;
         $clinic = Clinic::findOrFail($clinicId);
-        $timezone = $clinic->timezone;
         $dayOfWeek = Carbon::parse($date)->format('l');
         $businessHours = $clinic->businessHours()->where('day', $dayOfWeek)->first();
 
@@ -107,6 +106,7 @@ class PatientController extends Controller
             ->where('date', $date)
             ->where('status', '!=', AppointmentStatusEnum::Cancelled)
             ->get();
+
         $availableSlots = SlotService::generateAvailableSlots(
             $businessHours->open_time,
             $businessHours->close_time,
@@ -114,9 +114,7 @@ class PatientController extends Controller
             $businessHours->lunch_end,
             $duration,
             $existingAppointments,
-            $timezone
         );
-        dd($availableSlots);
         return response()->json(['data' => $availableSlots]);
     }
 

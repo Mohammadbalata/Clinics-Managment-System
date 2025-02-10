@@ -7,14 +7,12 @@ use Carbon\CarbonTimeZone;
 
 class SlotService
 {
-    public static function generateAvailableSlots($openTime, $closeTime, $lunchStart, $lunchEnd, $duration, $existingAppointments, $clinicTimezone)
+    public static function generateAvailableSlots($openTime, $closeTime, $lunchStart, $lunchEnd, $duration, $existingAppointments)
     {
-        $timezone = new CarbonTimeZone($clinicTimezone);
-
-        $businessStartTime = Carbon::parse($openTime, $timezone);
-        $businessEndTime = Carbon::parse($closeTime, $timezone);
-        $lunchStartTime = $lunchStart ? Carbon::parse($lunchStart, $timezone) : null;
-        $lunchEndTime = $lunchEnd ? Carbon::parse($lunchEnd, $timezone) : null;
+        $businessStartTime = Carbon::parse($openTime);
+        $businessEndTime = Carbon::parse($closeTime);
+        $lunchStartTime = $lunchStart ? Carbon::parse($lunchStart) : null;
+        $lunchEndTime = $lunchEnd ? Carbon::parse($lunchEnd) : null;
 
         $availableSlots = [];
         $currentSlotStart = $businessStartTime->copy();
@@ -32,16 +30,13 @@ class SlotService
             }
 
             // Check for conflicts with existing appointments
-            $conflict = $existingAppointments->contains(function ($appointment) use ($currentSlotStart, $slotEnd, $timezone) {
-                $appointmentStart = Carbon::parse($appointment->start_time, $timezone);
-                $appointmentEnd = Carbon::parse($appointment->end_time, $timezone);
-                return $currentSlotStart->lt($appointmentEnd) && $slotEnd->gt($appointmentStart);
+            $conflict = $existingAppointments->contains(function ($appointment) use ($currentSlotStart, $slotEnd) {
+                return $currentSlotStart->lt($appointment->end_time) && $slotEnd->gt($appointment->start_time);
             });
 
             if (!$conflict) {
                 $availableSlots[] = $currentSlotStart->toTimeString('minute') . "-" . $slotEnd->toTimeString('minute');
             }
-
             $currentSlotStart->addMinutes($duration);
         }
 

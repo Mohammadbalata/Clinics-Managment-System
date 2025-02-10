@@ -30,11 +30,9 @@ class AppointmentsController extends Controller
             $room = Room::findOrFail($procedure->room_id); // to get related clinic
             $doctorId = $procedure->doctor_id;
             $roomId = $procedure->room_id;
-            $clinic = Clinic::findOrFail($room->clini_id);
-            $dayOfWeek = Carbon::parse($$request->date)->format('l');
-            $timezone = $clinic->timezone;
+            $clinic = Clinic::findOrFail($room->clinic_id);
+            $dayOfWeek = Carbon::parse($request->date)->format('l');
             $businessHours = $clinic->businessHours()->where('day', $dayOfWeek)->first();
-
             $existingAppointments = Appointment::where(function ($query) use ($doctorId, $roomId) {
                 $query->where('doctor_id', $doctorId)
                     ->orWhere('room_id', $roomId);
@@ -42,7 +40,6 @@ class AppointmentsController extends Controller
                 ->where('date', $request->date)
                 ->where('status', '!=', AppointmentStatusEnum::Cancelled)
                 ->get();
-
             $availableSlots = SlotService::generateAvailableSlots(
                 $businessHours->open_time,
                 $businessHours->close_time,
@@ -50,12 +47,9 @@ class AppointmentsController extends Controller
                 $businessHours->lunch_end,
                 $procedure->duration,
                 $existingAppointments,
-                $timezone
             );
-
             $startTime = Carbon::parse($request->start_time);
             $procedureTime = $startTime->toTimeString("minutes") . '-' . $startTime->addMinutes($procedure->duration)->toTimeString("minutes");
-
             if (!in_array($procedureTime, $availableSlots)) {
                 return response()->json(['error' => 'Sorry, The Appointment is already booked'], 400);
             }
