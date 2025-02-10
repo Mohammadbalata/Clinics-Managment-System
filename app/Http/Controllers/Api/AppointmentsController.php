@@ -13,6 +13,7 @@ use App\Models\Clinic;
 use App\Models\Patient;
 use App\Models\Procedure;
 use App\Models\Room;
+use App\Services\SlotService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -25,24 +26,14 @@ class AppointmentsController extends Controller
         try {
             // validate req
             $request->validate(Appointment::rules($request));
-
-
             $procedure = Procedure::findOrFail($request->procedure_id); // to get the related doctor & room
             $room = Room::findOrFail($procedure->room_id); // to get related clinic
             $doctorId = $procedure->doctor_id;
             $roomId = $procedure->room_id;
-            $dayOfWeek = Carbon::parse($request->date)->format('l');
-
-            // check if the slot available.
-
-            // testing: check if the procedure is provided in this clinic by comparing the clinic_id and room->clinic
-            // TODO: make sure that to exclude just the (pending, confirm) appointment, while we need to consider the cancelled appointments as available slots
-            // handle the case of lunch_start & lunch_end. 
-
-
-            $businessHours = BusinessHour::where('clinic_id', $room->clinic_id)
-                ->where('day', $dayOfWeek)
-                ->first();
+            $clinic = Clinic::findOrFail($room->clini_id);
+            $dayOfWeek = Carbon::parse($$request->date)->format('l');
+            $timezone = $clinic->timezone;
+            $businessHours = $clinic->businessHours()->where('day', $dayOfWeek)->first();
 
             $existingAppointments = Appointment::where(function ($query) use ($doctorId, $roomId) {
                 $query->where('doctor_id', $doctorId)
@@ -52,18 +43,19 @@ class AppointmentsController extends Controller
                 ->where('status', '!=', AppointmentStatusEnum::Cancelled)
                 ->get();
 
-            $availableSlots = PatientController::generateAvailableSlots(
+            $availableSlots = SlotService::generateAvailableSlots(
                 $businessHours->open_time,
                 $businessHours->close_time,
                 $businessHours->lunch_start,
                 $businessHours->lunch_end,
                 $procedure->duration,
-                $existingAppointments
+                $existingAppointments,
+                $timezone
             );
 
             $startTime = Carbon::parse($request->start_time);
             $procedureTime = $startTime->toTimeString("minutes") . '-' . $startTime->addMinutes($procedure->duration)->toTimeString("minutes");
-            
+
             if (!in_array($procedureTime, $availableSlots)) {
                 return response()->json(['error' => 'Sorry, The Appointment is already booked'], 400);
             }

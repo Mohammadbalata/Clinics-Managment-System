@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\DoctorSpecialtyEnum;
+use App\Constants\DoctorSpecialties;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
@@ -23,7 +23,7 @@ class Doctor extends Model
         return  [
             'first_name' => 'required|string',
             'last_name' => 'required|string',
-            'specialty'    => 'required|in:' . implode(',', array_column(DoctorSpecialtyEnum::cases(), 'value')),
+            'specialty'    => 'required|in:' . implode(',', DoctorSpecialties::LIST),
             'email' => ['required', 'email', Rule::unique('doctors')->ignore($id)],
             'phone' => 'required|numeric',
             'clinic_id' => 'required|exists:clinics,id'

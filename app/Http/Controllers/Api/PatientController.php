@@ -6,10 +6,13 @@ use App\Enums\AppointmentStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\BusinessHour;
+use App\Models\Clinic;
 use App\Models\Patient;
 use App\Models\Procedure;
 use App\Models\Room;
+use App\Services\SlotService;
 use Carbon\Carbon;
+use Carbon\CarbonTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -75,23 +78,23 @@ class PatientController extends Controller
             'clinic_id' => 'required|exists:clinics,id',
         ]);
 
-        $procedureId = $request->input('procedure_id');
-        $date = $request->input('date');
-        $clinicId = $request->input('clinic_id');
+        $procedureId = $request->procedure_id;
+        $date = $request->date;
+        $clinicId = $request->clinic_id;
         $procedure = Procedure::findOrFail($procedureId);
         $duration = $procedure->duration;
         $doctorId = $procedure->doctor_id;
         $roomId = $procedure->room_id;
+        $clinic = Clinic::findOrFail($clinicId);
+        $timezone = $clinic->timezone;
+        $dayOfWeek = Carbon::parse($date)->format('l');
+        $businessHours = $clinic->businessHours()->where('day', $dayOfWeek)->first();
+
 
         // Ensure room belongs to the clinic
         if (!Room::where('id', $roomId)->where('clinic_id', $clinicId)->exists()) {
             return response()->json(['error' => 'Selected room does not belong to this clinic'], 400);
         }
-
-        $dayOfWeek = Carbon::parse($date)->format('l');
-        $businessHours = BusinessHour::where('clinic_id', $clinicId)
-            ->where('day', $dayOfWeek)
-            ->first();
 
         if (!$businessHours) {
             return response()->json(['error' => 'Clinic is closed on this day'], 404);
@@ -104,54 +107,18 @@ class PatientController extends Controller
             ->where('date', $date)
             ->where('status', '!=', AppointmentStatusEnum::Cancelled)
             ->get();
-        $availableSlots = $this->generateAvailableSlots(
+        $availableSlots = SlotService::generateAvailableSlots(
             $businessHours->open_time,
             $businessHours->close_time,
             $businessHours->lunch_start,
             $businessHours->lunch_end,
             $duration,
-            $existingAppointments
+            $existingAppointments,
+            $timezone
         );
         dd($availableSlots);
         return response()->json(['data' => $availableSlots]);
     }
 
-    /**
-     * Generate available time slots excluding booked appointments and lunch break.
-     */
-    public static function generateAvailableSlots($openTime, $closeTime, $lunchStart, $lunchEnd, $duration, $existingAppointments)
-    {
-        $businessStartTime = Carbon::parse($openTime);
-        $businessEndTime = Carbon::parse($closeTime);
-        $lunchStartTime = $lunchStart ? Carbon::parse($lunchStart) : null;
-        $lunchEndTime = $lunchEnd ? Carbon::parse($lunchEnd) : null;
-
-        $availableSlots = [];
-        $currentSlotStart = $businessStartTime->copy();
-
-        while ($currentSlotStart->copy()->addMinutes($duration)->lte($businessEndTime)) {
-            $slotEnd = $currentSlotStart->copy()->addMinutes($duration);
-
-            // Skip lunch break
-            if (
-                $lunchStartTime && $lunchEndTime &&
-                $currentSlotStart->lt($lunchEndTime) && $slotEnd->gt($lunchStartTime)
-            ) {
-                $currentSlotStart = $lunchEndTime->copy();
-                continue;
-            }
-
-            // Check for conflicts with existing appointments
-            $conflict = $existingAppointments->contains(function ($appointment) use ($currentSlotStart, $slotEnd) {
-                return $currentSlotStart->lt($appointment->end_time) && $slotEnd->gt($appointment->start_time);
-            });
-
-            if (!$conflict) {
-                $availableSlots[] = $currentSlotStart->toTimeString('minute') . "-" . $slotEnd->toTimeString('minute');
-            }
-            $currentSlotStart->addMinutes($duration);
-        }
-
-        return $availableSlots;
-    }
+    
 }
