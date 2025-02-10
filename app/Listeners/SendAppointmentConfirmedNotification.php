@@ -3,19 +3,20 @@
 namespace App\Listeners;
 
 use App\Events\AppointmentConfirmed;
-use App\Models\User;
 use App\Notifications\AppointmentConfirmedNotification;
+use App\Services\NotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
 class SendAppointmentConfirmedNotification
 {
+    protected $notificationService;
     /**
      * Create the event listener.
      */
-    public function __construct()
+    public function __construct(NotificationService $notificationService)
     {
-        //
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -23,8 +24,9 @@ class SendAppointmentConfirmedNotification
      */
     public function handle(AppointmentConfirmed $event): void
     {
+
         $appointment = $event->appointment;
-        $user = User::where('id','1')->first();
-        $user->notify(new AppointmentConfirmedNotification($appointment));
+        $this->notificationService->sendNotificationToAdmins(new  AppointmentConfirmedNotification($appointment));
+        return ;
     }
 }

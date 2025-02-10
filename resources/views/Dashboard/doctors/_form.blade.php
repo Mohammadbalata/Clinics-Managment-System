@@ -18,9 +18,9 @@
     <label for="specialty">Specialty</label>
     <select name="specialty" class="form-control form-select">
         <option value="">Select Specialty</option>
-        @foreach(App\Enums\DoctorSpecialtyEnum::cases() as $specialty)
-            <option value="{{ $specialty->value }}" @selected(old('specialty', $doctor->specialty) == $specialty->value)>
-                {{ ucwords(str_replace('_', ' ', $specialty->name)) }}
+        @foreach(App\Constants\DoctorSpecialties::LIST as $specialty)
+            <option value="{{ $specialty }}" @selected(old('specialty', $doctor->specialty) == $specialty)>
+                {{ ucwords(str_replace('_', ' ', $specialty)) }}
             </option>
         @endforeach
     </select>
