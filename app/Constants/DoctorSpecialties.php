@@ -2,7 +2,7 @@
 
 namespace App\Constants;
 
-class Specialties
+class DoctorSpecialties
 {
     public const LIST = [
         'family_medicine',

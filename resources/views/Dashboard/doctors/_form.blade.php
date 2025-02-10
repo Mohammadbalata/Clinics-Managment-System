@@ -18,7 +18,7 @@
     <label for="specialty">Specialty</label>
     <select name="specialty" class="form-control form-select">
         <option value="">Select Specialty</option>
-        @foreach(App\Constants\Specialties::LIST as $specialty)
+        @foreach(App\Constants\DoctorSpecialties::LIST as $specialty)
             <option value="{{ $specialty }}" @selected(old('specialty', $doctor->specialty) == $specialty)>
                 {{ ucwords(str_replace('_', ' ', $specialty)) }}
             </option>
