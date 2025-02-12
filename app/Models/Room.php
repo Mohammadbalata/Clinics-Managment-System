@@ -22,7 +22,7 @@ class Room extends Model
         'status' => RoomStatusEnum::class,
     ];
 
-    public static function rules()
+    public static function rules($id = null)
     {
         return [
             'name'       => 'required|string|max:255',

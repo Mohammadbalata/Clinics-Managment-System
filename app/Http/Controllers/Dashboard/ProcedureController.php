@@ -46,7 +46,7 @@ class ProcedureController extends Controller
     public function store(Request $request)
     {
         // dd($request->all());
-        $request->validate(Procedure::rules());
+        // $request->validate(Procedure::rules());
         Procedure::create($request->all());
         return redirect()->route('dashboard.procedures.index')->with('success', 'Procedure added successfully.');
     }
@@ -69,7 +69,7 @@ class ProcedureController extends Controller
      */
     public function update(Request $request, Procedure $procedure)
     {
-        $request->validate(Procedure::rules());
+        // $request->validate(Procedure::rules());
         $procedure->update($request->all());
         return redirect()->route('dashboard.procedures.index')->with('success', 'Procedure updated successfully.');
     }
