@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Carbon\Carbon;
-use Carbon\CarbonTimeZone;
 
 class SlotService
 {
@@ -21,25 +20,51 @@ class SlotService
             $slotEnd = $currentSlotStart->copy()->addMinutes($duration);
 
             // Skip lunch break
-            if (
-                $lunchStartTime && $lunchEndTime &&
-                $currentSlotStart->lt($lunchEndTime) && $slotEnd->gt($lunchStartTime)
-            ) {
+            if (self::isDuringLunchBreak($currentSlotStart, $slotEnd, $lunchStartTime, $lunchEndTime)) {
                 $currentSlotStart = $lunchEndTime->copy();
                 continue;
             }
 
             // Check for conflicts with existing appointments
-            $conflict = $existingAppointments->contains(function ($appointment) use ($currentSlotStart, $slotEnd) {
-                return $currentSlotStart->lt($appointment->end_time) && $slotEnd->gt($appointment->start_time);
-            });
-
-            if (!$conflict) {
+            if (!self::hasAppointmentConflict($currentSlotStart, $slotEnd, $existingAppointments)) {
                 $availableSlots[] = $currentSlotStart->toTimeString('minute') . "-" . $slotEnd->toTimeString('minute');
             }
+            
             $currentSlotStart->addMinutes($duration);
         }
 
         return $availableSlots;
+    }
+
+
+    public static function isProcedureTimeAvailable($procedureTimeStart, $procedureDuration, $availableSlots): bool
+    {
+        $procedureStart = Carbon::parse($procedureTimeStart);
+        $procedureEnd = $procedureStart->copy()->addMinutes($procedureDuration);
+
+        foreach ($availableSlots as $slot) {
+            list($slotStart, $slotEnd) = explode('-', $slot);
+            $slotStart = Carbon::parse($slotStart);
+            $slotEnd = Carbon::parse($slotEnd);
+
+            if ($procedureStart->lt($slotEnd) && $procedureEnd->gt($slotStart)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+       private static function isDuringLunchBreak($slotStart, $slotEnd, $lunchStartTime, $lunchEndTime)
+    {
+        return $lunchStartTime && $lunchEndTime &&
+            $slotStart->lt($lunchEndTime) && $slotEnd->gt($lunchStartTime);
+    }
+
+    private static function hasAppointmentConflict($slotStart, $slotEnd, $existingAppointments)
+    {
+        return $existingAppointments->contains(function ($appointment) use ($slotStart, $slotEnd) {
+            return $slotStart->lt($appointment->end_time) && $slotEnd->gt($appointment->start_time);
+        });
     }
 }
