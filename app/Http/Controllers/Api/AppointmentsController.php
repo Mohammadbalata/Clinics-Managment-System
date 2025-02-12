@@ -24,15 +24,18 @@ class AppointmentsController extends Controller
     public function schedule(Request $request)
     {
         try {
-            // validate req
+
             $request->validate(Appointment::rules($request));
-            $procedure = Procedure::findOrFail($request->procedure_id); // to get the related doctor & room
-            $room = Room::findOrFail($procedure->room_id); // to get related clinic
+            $procedure = Procedure::findOrFail($request->procedure_id);
+            $room = Room::findOrFail($procedure->room_id);
+            $clinic = Clinic::findOrFail($room->clinic_id);
+
             $doctorId = $procedure->doctor_id;
             $roomId = $procedure->room_id;
-            $clinic = Clinic::findOrFail($room->clinic_id);
+
             $dayOfWeek = Carbon::parse($request->date)->format('l');
             $businessHours = $clinic->businessHours()->where('day', $dayOfWeek)->first();
+
             $existingAppointments = Appointment::where(function ($query) use ($doctorId, $roomId) {
                 $query->where('doctor_id', $doctorId)
                     ->orWhere('room_id', $roomId);
@@ -40,6 +43,7 @@ class AppointmentsController extends Controller
                 ->where('date', $request->date)
                 ->where('status', '!=', AppointmentStatusEnum::Cancelled)
                 ->get();
+
             $availableSlots = SlotService::generateAvailableSlots(
                 $businessHours->open_time,
                 $businessHours->close_time,
@@ -48,12 +52,10 @@ class AppointmentsController extends Controller
                 $procedure->duration,
                 $existingAppointments,
             );
-            $startTime = Carbon::parse($request->start_time);
-            $procedureTime = $startTime->toTimeString("minutes") . '-' . $startTime->addMinutes($procedure->duration)->toTimeString("minutes");
-            if (!in_array($procedureTime, $availableSlots)) {
+            $isSlotAvailable = SlotService::isProcedureTimeAvailable($request->start_time, $procedure->duration, $availableSlots, $clinic->timezone);
+            if (!$isSlotAvailable) {
                 return response()->json(['error' => 'Sorry, The Appointment is already booked'], 400);
             }
-
 
 
             // get the user, 
@@ -90,7 +92,7 @@ class AppointmentsController extends Controller
                 'start_time' => $startTime->format('H:i'),
                 'end_time' => $endTime->format('H:i'),
             ]);
-            event(new AppointmentCreated($appointment));
+            // event(new AppointmentCreated($appointment));
             return response()->json([
                 'message' => 'appointment schedule successfully.',
                 'data' => $appointment,
