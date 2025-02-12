@@ -52,9 +52,9 @@ class AppointmentsController extends Controller
                 $procedure->duration,
                 $existingAppointments,
             );
-            $isSlotAvailable = SlotService::isProcedureTimeAvailable($request->start_time, $procedure->duration, $availableSlots, $clinic->timezone);
+            $isSlotAvailable = SlotService::isProcedureTimeAvailable($request->start_time, $procedure->duration, $availableSlots);
             if (!$isSlotAvailable) {
-                return response()->json(['error' => 'Sorry, The Appointment is already booked'], 400);
+                return response()->json(['error' => 'Sorry, This Appointment Is Not Available'], 400);
             }
 
 
@@ -92,7 +92,7 @@ class AppointmentsController extends Controller
                 'start_time' => $startTime->format('H:i'),
                 'end_time' => $endTime->format('H:i'),
             ]);
-            // event(new AppointmentCreated($appointment));
+            event(new AppointmentCreated($appointment));
             return response()->json([
                 'message' => 'appointment schedule successfully.',
                 'data' => $appointment,
