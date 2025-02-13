@@ -57,4 +57,15 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+    public function updateMailNotification(Request $request)
+    {
+        $request->validate([
+            'mail_notification' => 'required|boolean',
+        ]);
+        $user = $request->user();
+        $user->notifications_enabled = $request->mail_notification;
+        $user->save();
+
+        return redirect()->route('dashboard.profile.edit');
+    }
 }

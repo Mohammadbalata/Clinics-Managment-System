@@ -1,8 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
+        <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Profile') }}
+            </h2>
+            <form method="POST" action="{{ route('dashboard.profile.update-mail-notification') }}" class="flex items-center space-x-4">
+                @csrf
+                @method('PUT')
+                <div class="form-group">
+                    <x-form.radio onchange="this.form.submit()" name="mail_notification" label="Notifications: " :checked="$user->notifications_enabled" :options="['1' => 'Enabled', '0' => 'Disabled']" />
+                </div>
+            </form>
+        </div>
     </x-slot>
 
     <div class="py-12">
