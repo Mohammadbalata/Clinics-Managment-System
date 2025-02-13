@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AppointmentCreatedNotification extends Notification
+class AppointmentCreatedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
     protected $appointment;
@@ -36,6 +36,9 @@ class AppointmentCreatedNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
+
+        // throw new \Exception('Simulated email failure');
+        
         $patient = Patient::findOrFail($this->appointment->patient_id);
         return (new MailMessage)
         ->subject("New Appointment #{$this->appointment->id} .")

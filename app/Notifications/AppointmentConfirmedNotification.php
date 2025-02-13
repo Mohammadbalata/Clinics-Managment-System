@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AppointmentConfirmedNotification extends Notification
+class AppointmentConfirmedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
     protected $appointment;

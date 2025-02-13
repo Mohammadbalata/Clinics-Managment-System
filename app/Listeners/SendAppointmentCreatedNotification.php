@@ -7,9 +7,11 @@ use App\Notifications\AppointmentCreatedNotification;
 use App\Services\NotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Log;
 
-class SendAppointmentCreatedNotification
+class SendAppointmentCreatedNotification implements ShouldQueue
 {
+    use InteractsWithQueue;
     protected $notificationService;
     /**
      * Create the event listener.
@@ -27,6 +29,11 @@ class SendAppointmentCreatedNotification
         $appointment = $event->appointment;
         $this->notificationService->sendNotificationToAdmins(new  AppointmentCreatedNotification($appointment));
         return ;
+    }
+
+    public function failed(AppointmentCreated $event, \Throwable $exception): void
+    {
+        Log::error('Failed to send appointment created notification: ' . $exception->getMessage());
     }
         
 }
