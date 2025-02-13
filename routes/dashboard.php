@@ -21,6 +21,9 @@ Route::patch('/profile', [ProfileController::class, 'update'])
 Route::delete('/profile', [ProfileController::class, 'destroy'])
     ->name('profile.destroy');
 
+Route::put('/profile/update-mail-notification', [ProfileController::class, 'updateMailNotification'])
+    ->name('profile.update-mail-notification');
+
 
 
 
