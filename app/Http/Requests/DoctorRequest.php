@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Constants\DoctorSpecialties;
 use App\Models\Doctor;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class DoctorRequest extends FormRequest
 {
@@ -23,6 +25,13 @@ class DoctorRequest extends FormRequest
     public function rules(): array
     {
         $id = $this->route('doctor');
-        return Doctor::rules($id);
+        return  [
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'specialty'    => 'required|in:' . implode(',', DoctorSpecialties::LIST),
+            'email' => ['required', 'email', Rule::unique('doctors')->ignore($id)],
+            'phone' => 'required|numeric',
+            'clinic_id' => 'required|exists:clinics,id'
+        ];
     }
 }
