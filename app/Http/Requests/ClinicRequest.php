@@ -22,6 +22,17 @@ class ClinicRequest extends FormRequest
      */
     public function rules(): array
     {
-        return Clinic::rules();
+        return  [
+            'office_name'       => 'required|string|min:3|max:255',
+            'office_address'    => 'required|string|max:500',
+            'timezone'          => 'required|timezone',
+            'secretary_number'  => 'required|string|regex:/^\+?[0-9]{7,15}$/',
+
+            'business_hours.*.open_time'  => 'required|date_format:H:i',
+            'business_hours.*.close_time'    => 'required|date_format:H:i|after:business_hours.*.open_time',
+
+            'business_hours.*.lunch_start' => 'nullable|date_format:H:i|before:business_hours.*.lunch_end|after:business_hours.*.open_time',
+            'business_hours.*.lunch_end'   => 'nullable|date_format:H:i|before:business_hours.*.close_time',
+        ];
     }
 }

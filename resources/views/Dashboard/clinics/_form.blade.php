@@ -19,7 +19,7 @@
   <select name="timezone" class="form-control form-select">
     <option value="">Primary timezone</option>
     @foreach (\DateTimeZone::listIdentifiers() as $timezone)
-      <option value="{{ $timezone }}" @selected(old('timezone', $clinic->timezone) == $timezone)>{{ $timezone }}</option>
+    <option value="{{ $timezone }}" @selected(old('timezone', $clinic->timezone) == $timezone)>{{ $timezone }}</option>
     @endforeach
   </select>
 </div>
@@ -46,7 +46,7 @@
     @endphp
 
     @foreach ($days as $day)
-   
+
     <tr>
       <td>{{ $day }}</td>
       <td>

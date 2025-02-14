@@ -22,6 +22,10 @@ class InsuranceRequest extends FormRequest
      */
     public function rules(): array
     {
-        return Insurance::rules();
+        return  [
+            'name'       => 'required|string|max:255',
+            'description'    => 'string',
+            'logo' => ['required', 'image', 'max:1048576', 'dimensions:min_width=100,min_height=100']
+        ];
     }
 }
