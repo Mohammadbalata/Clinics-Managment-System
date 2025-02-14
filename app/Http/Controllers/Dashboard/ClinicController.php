@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ClinicRequest;
 use App\Models\BusinessHour;
 use App\Models\Clinic;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -50,7 +51,7 @@ class ClinicController extends Controller
         $business_hours = $this->getBusinessHoursForClinic($clinic);
         $insurances = $clinic->insurances;
         // dd($business_hours);
-        return view('dashboard.clinics.show', compact('clinic', 'business_hours','insurances'));
+        return view('dashboard.clinics.show', compact('clinic', 'business_hours', 'insurances'));
     }
 
     /**
@@ -107,18 +108,18 @@ class ClinicController extends Controller
     /**
      * Get business hours for a clinic grouped by day.
      */
-    private function getBusinessHoursForClinic(Clinic $clinic): array
+    public function getBusinessHoursForClinic(Clinic $clinic): array
     {
         return $clinic->businessHours
-        ->groupBy('day')
-        ->map(function ($hours) {
-            return [
-                'open_time' => substr($hours[0]->open_time, 0, -3),
-                'close_time' => substr($hours[0]->close_time, 0, -3),
-                'lunch_start' => $hours[0]->lunch_start ? substr($hours[0]->lunch_start, 0, -3) : null,
-                'lunch_end' => $hours[0]->lunch_end ? substr($hours[0]->lunch_end, 0, -3) : null,
-            ];
-        })
-        ->toArray();
+            ->groupBy('day')
+            ->map(function ($hours) {
+                return [
+                    'open_time' => Carbon::parse($hours[0]->open_time)->format('H:i'),
+                    'close_time' => Carbon::parse($hours[0]->close_time)->format('H:i'),
+                    'lunch_start' => $hours[0]->lunch_start ? Carbon::parse($hours[0]->lunch_start)->format('H:i') : null,
+                    'lunch_end' => $hours[0]->lunch_end ? Carbon::parse($hours[0]->lunch_end)->format('H:i') : null,
+                ];
+            })
+            ->toArray();
     }
 }

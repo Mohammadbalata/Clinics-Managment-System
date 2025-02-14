@@ -7,12 +7,16 @@ use App\Events\AppointmentCreated;
 use App\Events\AppointmentCancelled;
 use App\Events\AppointmentConfirmed;
 use App\Http\Controllers\Controller;
+use App\Jobs\NotifyAdminsJob;
 use App\Models\Appointment;
 use App\Models\BusinessHour;
 use App\Models\Clinic;
 use App\Models\Patient;
 use App\Models\Procedure;
 use App\Models\Room;
+use App\Notifications\AppointmentCancelledNotification;
+use App\Notifications\AppointmentConfirmedNotification;
+use App\Notifications\AppointmentCreatedNotification;
 use App\Services\SlotService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -93,6 +97,8 @@ class AppointmentsController extends Controller
                 'end_time' => $endTime->format('H:i'),
             ]);
             event(new AppointmentCreated($appointment));
+            // NotifyAdminsJob::dispatch($appointment,AppointmentCreatedNotification::class);
+
             return response()->json([
                 'message' => 'appointment schedule successfully.',
                 'data' => $appointment,
@@ -129,6 +135,7 @@ class AppointmentsController extends Controller
             $appointment->status = AppointmentStatusEnum::Confirmed;
             $appointment->save();
             event(new AppointmentConfirmed($appointment));
+            // NotifyAdminsJob::dispatch($appointment,AppointmentConfirmedNotification::class);
 
             return response()->json([
                 'message' => 'appointment confirmed.',
@@ -171,6 +178,8 @@ class AppointmentsController extends Controller
             $appointment->save();
             // dd($appointment);
             event(new AppointmentCancelled($appointment));
+            // NotifyAdminsJob::dispatch($appointment,AppointmentCancelledNotification::class);
+
 
             return response()->json([
                 'message' => 'appointment cancelled.',
