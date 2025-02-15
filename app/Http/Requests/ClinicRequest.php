@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Clinic;
+use App\Rules\ValidBusinessHours;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ClinicRequest extends FormRequest
@@ -22,17 +22,22 @@ class ClinicRequest extends FormRequest
      */
     public function rules(): array
     {
-        return  [
+        $rules = [
             'office_name'       => 'required|string|min:3|max:255',
             'office_address'    => 'required|string|max:500',
             'timezone'          => 'required|timezone',
             'secretary_number'  => 'required|string|regex:/^\+?[0-9]{7,15}$/',
-
-            'business_hours.*.open_time'  => 'required|date_format:H:i',
-            'business_hours.*.close_time'    => 'required|date_format:H:i|after:business_hours.*.open_time',
-
-            'business_hours.*.lunch_start' => 'nullable|date_format:H:i|before:business_hours.*.lunch_end|after:business_hours.*.open_time',
-            'business_hours.*.lunch_end'   => 'nullable|date_format:H:i|before:business_hours.*.close_time',
         ];
+
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+        foreach ($days as $day) {
+            $rules["business_hours.$day.open_time"] = ['required', 'date_format:H:i'];
+            $rules["business_hours.$day.close_time"] = ['required', 'date_format:H:i', new ValidBusinessHours($day, 'close_time')];
+            $rules["business_hours.$day.lunch_start"] = ['nullable', 'date_format:H:i', new ValidBusinessHours($day, 'lunch_start')];
+            $rules["business_hours.$day.lunch_end"] = ['nullable', 'date_format:H:i', new ValidBusinessHours($day, 'lunch_end')];
+        }
+
+        return $rules;
     }
 }

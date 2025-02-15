@@ -19,6 +19,7 @@ use App\Notifications\AppointmentConfirmedNotification;
 use App\Notifications\AppointmentCreatedNotification;
 use App\Services\SlotService;
 use Carbon\Carbon;
+use Carbon\CarbonTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -40,6 +41,11 @@ class AppointmentsController extends Controller
             $dayOfWeek = Carbon::parse($request->date)->format('l');
             $businessHours = $clinic->businessHours()->where('day', $dayOfWeek)->first();
 
+            
+            $patientTimezone = 'Asia/Gaza';  // hard coded the patient timezone
+            $startTime = Carbon::createFromFormat('H:i', $request->start_time, new CarbonTimeZone($patientTimezone))
+                ->setTimezone('UTC');
+
             $existingAppointments = Appointment::where(function ($query) use ($doctorId, $roomId) {
                 $query->where('doctor_id', $doctorId)
                     ->orWhere('room_id', $roomId);
@@ -56,7 +62,7 @@ class AppointmentsController extends Controller
                 $procedure->duration,
                 $existingAppointments,
             );
-            $isSlotAvailable = SlotService::isProcedureTimeAvailable($request->start_time, $procedure->duration, $availableSlots);
+            $isSlotAvailable = SlotService::isProcedureTimeAvailable($startTime, $procedure->duration, $availableSlots);
             if (!$isSlotAvailable) {
                 return response()->json(['error' => 'Sorry, This Appointment Is Not Available'], 400);
             }
@@ -82,8 +88,7 @@ class AppointmentsController extends Controller
                 }
             }
 
-            // create an appointment record, with pending status,
-            $startTime = Carbon::createFromFormat('H:i', $request->start_time);
+            
             $endTime = $startTime->copy()->addMinutes($procedure->duration);
             $appointment = Appointment::create([
                 'date' => $request->date,

@@ -67,4 +67,14 @@ class SlotService
             return $slotStart->lt($appointment->end_time) && $slotEnd->gt($appointment->start_time);
         });
     }
+
+    public static function  convertTimeSlotsToTimezone(array $timeSlots, string $targetTimezone): array
+    {
+        return array_map(function ($slot) use ($targetTimezone) {
+            [$start, $end] = explode('-', $slot);
+            $startTime = Carbon::parse($start, 'UTC')->setTimezone($targetTimezone)->format('H:i');
+            $endTime = Carbon::parse($end, 'UTC')->setTimezone($targetTimezone)->format('H:i');
+            return "$startTime-$endTime";
+        }, $timeSlots);
+    }
 }
