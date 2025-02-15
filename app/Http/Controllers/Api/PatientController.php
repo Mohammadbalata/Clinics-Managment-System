@@ -10,6 +10,7 @@ use App\Models\Clinic;
 use App\Models\Patient;
 use App\Models\Procedure;
 use App\Models\Room;
+use App\Services\ClinicService;
 use App\Services\SlotService;
 use Carbon\Carbon;
 use Carbon\CarbonTimeZone;
@@ -89,7 +90,6 @@ class PatientController extends Controller
         $dayOfWeek = Carbon::parse($date)->format('l');
         $businessHours = $clinic->businessHours()->where('day', $dayOfWeek)->first();
 
-
         // Ensure room belongs to the clinic
         if (!Room::where('id', $roomId)->where('clinic_id', $clinicId)->exists()) {
             return response()->json(['error' => 'Selected room does not belong to this clinic'], 400);
@@ -115,7 +115,10 @@ class PatientController extends Controller
             $duration,
             $existingAppointments,
         );
-        return response()->json(['data' => $availableSlots]);
+        $patientTimezone = 'Asia/Gaza';  // hard coded the patient timezone
+        $pateientTimezonsSlot = SlotService::convertTimeSlotsToTimezone($availableSlots,$patientTimezone);
+       
+        return response()->json(['data' => $pateientTimezonsSlot]);
     }
 
     
