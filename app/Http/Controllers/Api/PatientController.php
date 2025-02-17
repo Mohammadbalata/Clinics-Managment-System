@@ -26,7 +26,6 @@ class PatientController extends Controller
             $request->validate([
                 'query' => 'required|string|min:3',
             ]);
-
             $patient = Patient::where('phone_number', $request->input('query'))
                 ->orWhere('first_name', $request->input('query'))
                 ->with('appointments')->get();
@@ -44,15 +43,20 @@ class PatientController extends Controller
         }
     }
 
-    public function patientAppointments(Request $request)
+    public function patientAppointments($query)
     {
         try {
-            $request->validate([
-                'query' => 'required|string|min:3',
-            ]);
+            if (strlen($query) < 1) {
+                return response()->json([
+                    'error' => 'Query must be at least 1 characters long.',
+                ], Response::HTTP_BAD_REQUEST);
+            }
 
-            $appointments = Appointment::where('phone_number', $request->input('query'))
-                ->orWhere('first_name', $request->input('query'))
+
+            $appointments = Appointment::join('patients', 'appointments.patient_id', '=', 'patients.id')
+                ->where('patients.phone_number', $query)
+                ->orWhere('patients.id', $query)
+                ->select('appointments.*')
                 ->get();
 
             if ($appointments->isEmpty()) {
@@ -116,10 +120,8 @@ class PatientController extends Controller
             $existingAppointments,
         );
         $patientTimezone = 'Asia/Gaza';  // hard coded the patient timezone
-        $pateientTimezonsSlot = SlotService::convertTimeSlotsToTimezone($availableSlots,$patientTimezone);
-       
+        $pateientTimezonsSlot = SlotService::convertTimeSlotsToTimezone($availableSlots, $patientTimezone);
+
         return response()->json(['data' => $pateientTimezonsSlot]);
     }
-
-    
 }
