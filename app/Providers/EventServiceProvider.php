@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Events\AppointmentCreated;
 use App\Listeners\SendAppointmentCreatedNotification;
+use App\Listeners\UpdateRoomStatus;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -15,7 +16,8 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
         AppointmentCreated::class => [
-         SendAppointmentCreatedNotification::class,
+            // UpdateRoomStatus::class,
+            SendAppointmentCreatedNotification::class,
         ]
     ];
 

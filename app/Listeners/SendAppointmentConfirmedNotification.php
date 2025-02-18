@@ -26,7 +26,6 @@ class SendAppointmentConfirmedNotification implements ShouldQueue
      */
     public function handle(AppointmentConfirmed $event): void
     {
-
         $appointment = $event->appointment;
         $this->notificationService->sendNotificationToAdmins(new  AppointmentConfirmedNotification($appointment));
         return;
