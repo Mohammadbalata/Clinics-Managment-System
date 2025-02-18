@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DoctorRequest;
 use App\Models\Clinic;
 use App\Models\Doctor;
+use App\Models\Procedure;
 use Illuminate\Http\Request;
 
 class DoctorController extends Controller
@@ -16,7 +17,8 @@ class DoctorController extends Controller
     public function index()
     {
         $doctors = Doctor::filter(request()->all())->with('clinic')->paginate(10);
-        return view('dashboard.doctors.index', compact('doctors'));
+        $procedures = Procedure::all();
+        return view('dashboard.doctors.index', compact('doctors','procedures'));
     }
 
     /**
