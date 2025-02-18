@@ -18,6 +18,23 @@
 
 <form action="{{URL::current()}}" method="get" class="d-flex justify-content-between gap-4 mb-4">
     <x-form.input name="first_name" placeholder="Name"  class="mx-2" :value="request('name')" />
+    <select  name="specialty" class="form-control form-select">
+        <option value="">Specialty</option>
+        @foreach(App\Constants\DoctorSpecialties::LIST as $specialty)
+            <option value="{{ $specialty }}" @selected(old('specialty', request('specialty')) == $specialty)>
+                {{ ucwords(str_replace('_', ' ', $specialty)) }}
+            </option>
+        @endforeach
+        
+    </select>
+    <select  name="id" class="form-control form-select">
+        <option value="">Procedure</option>
+        @foreach($procedures as $procedure)
+            <option value="{{ $procedure->doctor_id }}">
+                {{ $procedure->name }}
+            </option>
+        @endforeach
+    </select>
     <button type="submit" class="btn btn-dark mx-2">Search</button>
 </form>
 
