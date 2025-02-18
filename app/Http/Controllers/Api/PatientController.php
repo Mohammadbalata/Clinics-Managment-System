@@ -5,15 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Enums\AppointmentStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
-use App\Models\BusinessHour;
 use App\Models\Clinic;
 use App\Models\Patient;
 use App\Models\Procedure;
 use App\Models\Room;
-use App\Services\ClinicService;
-use App\Services\SlotService;
+use App\Services\AppointmentService;
 use Carbon\Carbon;
-use Carbon\CarbonTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -87,6 +84,8 @@ class PatientController extends Controller
         $date = $request->date;
         $clinicId = $request->clinic_id;
         $procedure = Procedure::findOrFail($procedureId);
+        $room = Room::findOrFail($procedure->room_id);
+        $status = $room->status;
         $duration = $procedure->duration;
         $doctorId = $procedure->doctor_id;
         $roomId = $procedure->room_id;
@@ -111,17 +110,16 @@ class PatientController extends Controller
             ->where('status', '!=', AppointmentStatusEnum::Cancelled)
             ->get();
 
-        $availableSlots = SlotService::generateAvailableSlots(
+        $availableSlots = AppointmentService::generateAvailableSlots(
             $businessHours->open_time,
             $businessHours->close_time,
             $businessHours->lunch_start,
             $businessHours->lunch_end,
             $duration,
             $existingAppointments,
+            $status
         );
-        $patientTimezone = 'Asia/Gaza';  // hard coded the patient timezone
-        $pateientTimezonsSlot = SlotService::convertTimeSlotsToTimezone($availableSlots, $patientTimezone);
-
-        return response()->json(['data' => $pateientTimezonsSlot]);
+        $convertedSlots = AppointmentService::convertTimeSlotsToTimezone($availableSlots, $clinic->timezone);
+        return response()->json(['data' => $convertedSlots]);
     }
 }

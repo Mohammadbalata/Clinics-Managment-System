@@ -7,17 +7,12 @@ use App\Events\AppointmentCreated;
 use App\Events\AppointmentCancelled;
 use App\Events\AppointmentConfirmed;
 use App\Http\Controllers\Controller;
-use App\Jobs\NotifyAdminsJob;
 use App\Models\Appointment;
-use App\Models\BusinessHour;
 use App\Models\Clinic;
 use App\Models\Patient;
 use App\Models\Procedure;
 use App\Models\Room;
-use App\Notifications\AppointmentCancelledNotification;
-use App\Notifications\AppointmentConfirmedNotification;
-use App\Notifications\AppointmentCreatedNotification;
-use App\Services\SlotService;
+use App\Services\AppointmentService;
 use Carbon\Carbon;
 use Carbon\CarbonTimeZone;
 use Illuminate\Http\Request;
@@ -33,6 +28,7 @@ class AppointmentsController extends Controller
             $request->validate(Appointment::rules($request));
             $procedure = Procedure::findOrFail($request->procedure_id);
             $room = Room::findOrFail($procedure->room_id);
+            $status = $room->status;
             $clinic = Clinic::findOrFail($room->clinic_id);
 
             $doctorId = $procedure->doctor_id;
@@ -41,11 +37,9 @@ class AppointmentsController extends Controller
             $dayOfWeek = Carbon::parse($request->date)->format('l');
             $businessHours = $clinic->businessHours()->where('day', $dayOfWeek)->first();
 
-            
-            $patientTimezone = 'Asia/Gaza';  // hard coded the patient timezone
-            $startTime = Carbon::createFromFormat('H:i', $request->start_time, new CarbonTimeZone($patientTimezone))
-                ->setTimezone('UTC');
 
+            $startTime = Carbon::createFromFormat('H:i', $request->start_time, new CarbonTimeZone($clinic->timezone))
+                ->setTimezone('UTC');
             $existingAppointments = Appointment::where(function ($query) use ($doctorId, $roomId) {
                 $query->where('doctor_id', $doctorId)
                     ->orWhere('room_id', $roomId);
@@ -54,7 +48,7 @@ class AppointmentsController extends Controller
                 ->where('status', '!=', AppointmentStatusEnum::Cancelled)
                 ->get();
 
-            $availableSlots = SlotService::generateAvailableSlots(
+            $availableSlots = AppointmentService::generateAvailableSlots(
                 $businessHours->open_time,
                 $businessHours->close_time,
                 $businessHours->lunch_start,
@@ -62,7 +56,9 @@ class AppointmentsController extends Controller
                 $procedure->duration,
                 $existingAppointments,
             );
-            $isSlotAvailable = SlotService::isProcedureTimeAvailable($startTime, $procedure->duration, $availableSlots);
+            
+            $isSlotAvailable = AppointmentService::isProcedureTimeAvailable($startTime, $procedure->duration, $availableSlots);
+            
             if (!$isSlotAvailable) {
                 return response()->json(['error' => 'Sorry, This Appointment Is Not Available'], 400);
             }
@@ -88,7 +84,6 @@ class AppointmentsController extends Controller
                 }
             }
 
-            
             $endTime = $startTime->copy()->addMinutes($procedure->duration);
             $appointment = Appointment::create([
                 'date' => $request->date,
@@ -102,8 +97,6 @@ class AppointmentsController extends Controller
                 'end_time' => $endTime->format('H:i'),
             ]);
             event(new AppointmentCreated($appointment));
-            // NotifyAdminsJob::dispatch($appointment,AppointmentCreatedNotification::class);
-
             return response()->json([
                 'message' => 'appointment schedule successfully.',
                 'data' => $appointment,
@@ -140,7 +133,6 @@ class AppointmentsController extends Controller
             $appointment->status = AppointmentStatusEnum::Confirmed;
             $appointment->save();
             event(new AppointmentConfirmed($appointment));
-            // NotifyAdminsJob::dispatch($appointment,AppointmentConfirmedNotification::class);
 
             return response()->json([
                 'message' => 'appointment confirmed.',
@@ -181,9 +173,7 @@ class AppointmentsController extends Controller
             $appointment->status = AppointmentStatusEnum::Cancelled;
             $request->cancellation_reason && $appointment->cancellation_reason = $request->cancellation_reason;
             $appointment->save();
-            // dd($appointment);
             event(new AppointmentCancelled($appointment));
-            // NotifyAdminsJob::dispatch($appointment,AppointmentCancelledNotification::class);
 
 
             return response()->json([

@@ -3,10 +3,11 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use App\Enums\RoomStatusEnum;
 
-class SlotService
+class AppointmentService
 {
-    public static function generateAvailableSlots($openTime, $closeTime, $lunchStart, $lunchEnd, $duration, $existingAppointments)
+    public static function generateAvailableSlots($openTime, $closeTime, $lunchStart, $lunchEnd, $duration, $existingAppointments )
     {
         $businessStartTime = Carbon::parse($openTime);
         $businessEndTime = Carbon::parse($closeTime);
@@ -24,12 +25,14 @@ class SlotService
                 $currentSlotStart = $lunchEndTime->copy();
                 continue;
             }
+           
+
 
             // Check for conflicts with existing appointments
             if (!self::hasAppointmentConflict($currentSlotStart, $slotEnd, $existingAppointments)) {
-                $availableSlots[] = $currentSlotStart->toTimeString('minute') . "-" . $slotEnd->toTimeString('minute');
+                $availableSlots[] = [$currentSlotStart->copy(), $slotEnd->copy()];
             }
-            
+
             $currentSlotStart->addMinutes($duration);
         }
 
@@ -39,14 +42,11 @@ class SlotService
 
     public static function isProcedureTimeAvailable($procedureTimeStart, $procedureDuration, $availableSlots): bool
     {
+       
         $procedureStart = Carbon::parse($procedureTimeStart);
         $procedureEnd = $procedureStart->copy()->addMinutes($procedureDuration);
-
         foreach ($availableSlots as $slot) {
-            list($slotStart, $slotEnd) = explode('-', $slot);
-            $slotStart = Carbon::parse($slotStart);
-            $slotEnd = Carbon::parse($slotEnd);
-
+            list($slotStart, $slotEnd) =  $slot;
             if ($procedureStart->lt($slotEnd) && $procedureEnd->gt($slotStart)) {
                 return true;
             }
@@ -55,7 +55,7 @@ class SlotService
         return false;
     }
 
-       private static function isDuringLunchBreak($slotStart, $slotEnd, $lunchStartTime, $lunchEndTime)
+    private static function isDuringLunchBreak($slotStart, $slotEnd, $lunchStartTime, $lunchEndTime)
     {
         return $lunchStartTime && $lunchEndTime &&
             $slotStart->lt($lunchEndTime) && $slotEnd->gt($lunchStartTime);
@@ -68,13 +68,13 @@ class SlotService
         });
     }
 
-    public static function  convertTimeSlotsToTimezone(array $timeSlots, string $targetTimezone): array
+    public static function  convertTimeSlotsToTimezone(array $timeSlots, string $targetTimezone = 'UTC'): array
     {
         return array_map(function ($slot) use ($targetTimezone) {
-            [$start, $end] = explode('-', $slot);
-            $startTime = Carbon::parse($start, 'UTC')->setTimezone($targetTimezone)->format('H:i');
-            $endTime = Carbon::parse($end, 'UTC')->setTimezone($targetTimezone)->format('H:i');
-            return "$startTime-$endTime";
+            [$start, $end] =  $slot;
+            return $start->copy()->setTimezone($targetTimezone)->format('H:i')
+                . '-'
+                . $end->copy()->setTimezone($targetTimezone)->format('H:i');
         }, $timeSlots);
     }
 }
